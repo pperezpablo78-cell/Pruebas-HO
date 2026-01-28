@@ -1,0 +1,98 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql" // o "mysql" o "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Employee {
+  id                String   @id @default(uuid())
+  name              String
+  employeeCode      String   @unique
+  position          String?
+  labora            String   @default("Si")
+  maxHomeDays       Int      @default(2)
+  modalidad         String   @default("Hibrido") // Hibrido, Full Remoto, Turno Rotativo
+  officePlaceNumber Int
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  schedules Schedule[]
+  dayReasons DayReason[]
+  vacations Vacation[]
+
+  @@map("employees")
+}
+
+model Schedule {
+  id         String   @id @default(uuid())
+  employeeId String
+  week       Int
+  day        String
+  status     String // home, office, holiday
+  month      Int
+  year       Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, week, day, month, year])
+  @@index([employeeId, month, year])
+  @@map("schedules")
+}
+
+model DayReason {
+  id          String   @id @default(uuid())
+  employeeId  String
+  week        Int
+  day         String
+  reason      String
+  month       Int
+  year        Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, week, day, month, year])
+  @@index([employeeId, month, year])
+  @@map("day_reasons")
+}
+
+model Holiday {
+  id          String   @id @default(uuid())
+  week        Int
+  day         String
+  description String
+  month       Int
+  year        Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([week, day, month, year])
+  @@index([month, year])
+  @@map("holidays")
+}
+
+model Vacation {
+  id          String   @id @default(uuid())
+  employeeId  String
+  week        Int
+  day         String
+  month       Int
+  year        Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, week, day, month, year])
+  @@index([employeeId, month, year])
+  @@map("vacations")
+}
